@@ -1,0 +1,18 @@
+﻿@{
+    ViewData["Title"] = "Panel de Azafata";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="dashboard-container" style="margin:0; padding:0;">
+    <div class="dashboard-header azafata-header">
+        <div class="dash-icon">🚌</div>
+        <div>
+            <h1>Panel de Azafata</h1>
+            <p>Autobús asignado: <strong>#@ViewBag.AutobusId</strong></p>
+        </div>
+    </div>
+    <div class="dash-cards">
+        <div class="dash-card">👶 Lista de Alumnos</div>
+        <div class="dash-card">📍 Ruta del Día</div>
+        <div class="dash-card">📝 Registro de Asistencia</div>
+    </div>
+</div>
