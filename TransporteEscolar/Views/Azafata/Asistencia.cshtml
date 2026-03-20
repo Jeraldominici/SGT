@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Registro de Asistencia";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>📝 Escanear QR del Estudiante</h2>
+
+<div id="reader" style="width:300px; margin-top:20px;"></div>
+
+<p id="resultado" style="margin-top:20px; font-weight:bold;"></p>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+function onScanSuccess(decodedText) {
+
+    document.getElementById("resultado").innerText = "QR leído: " + decodedText;
+
+    fetch('/Azafata/RegistrarQR', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(decodedText)
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.mensaje);
+    })
+    .catch(err => console.error(err));
+}
+
+let scanner = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: 250
+});
+
+scanner.render(onScanSuccess);
+</script>

@@ -11,6 +11,8 @@ namespace TransporteEscolar.Data
         public DbSet<Rol> Roles { get; set; }
         public DbSet<Autobus> Autobuses { get; set; }
         public DbSet<BitacoraAcceso> BitacoraAccesos { get; set; }
+        public DbSet<Estudiante> Estudiantes { get; set; }
+        public DbSet<RegistroAbordaje> RegistrosAbordaje { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -77,6 +79,27 @@ namespace TransporteEscolar.Data
                  .HasForeignKey(b => b.UsuarioId)
                  .IsRequired(false)
                  .OnDelete(DeleteBehavior.SetNull);
+            });
+            // ── Estudiante ─────────────────────────
+            modelBuilder.Entity<Estudiante>(e =>
+            {
+                e.ToTable("Estudiantes");
+                e.HasKey(e => e.IdEstudiante);
+                e.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                e.Property(e => e.Apellido1).HasMaxLength(100);
+                e.Property(e => e.Apellido2).HasMaxLength(100);
+                e.Property(e => e.CodigoQR).HasMaxLength(100);
+            });
+
+            // ── Registro Abordaje ──────────────────
+            modelBuilder.Entity<RegistroAbordaje>(e =>
+            {
+                e.ToTable("RegistroAbordaje");
+                e.HasKey(r => r.IdRegistro);
+
+                e.HasOne(r => r.Estudiante)
+                 .WithMany()
+                 .HasForeignKey(r => r.IdEstudiante);
             });
         }
     }

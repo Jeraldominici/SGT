@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Ruta del Día";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>📍 Ruta del Autobús</h2>
+
+<div id="map" style="height:400px; width:100%; margin-top:20px;"></div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY"></script>
+
+<script>
+function initMap() {
+
+    var ubicacion = { lat: 18.4861, lng: -69.9312 };
+
+    var map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 14,
+        center: ubicacion
+    });
+
+    var marker = new google.maps.Marker({
+        position: ubicacion,
+        map: map,
+        title: "Autobús"
+    });
+}
+
+initMap();
+</script>
