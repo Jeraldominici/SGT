@@ -1,12 +1,11 @@
 ﻿using System.Security.Claims;
-using TransporteEscolar.Helpers;          // ← SIN el ".Web"
+using TransporteEscolar.Helpers;
 using TransporteEscolar.Models;
 using TransporteEscolar.Repositories.Interfaces;
 using TransporteEscolar.Services.Interfaces;
 using TransporteEscolar.ViewModels;
 
-
-namespace TransporteEscolar.Services      // ← SIN el ".Web"
+namespace TransporteEscolar.Services
 {
     public class AuthService : IAuthService
     {
@@ -29,46 +28,43 @@ namespace TransporteEscolar.Services      // ← SIN el ".Web"
             if (usuario.Bloqueado)
             {
                 await RegistrarBitacora(usuario.UsuarioId, modelo.NombreUsuario, false, ip, userAgent, "Cuenta bloqueada");
-                return (false, "Tu cuenta está bloqueada. Contacta al administrador.", null);
+                return (false, "Tu cuenta está bloqueada.", null);
             }
 
             if (!string.Equals(usuario.Rol.Nombre, modelo.Rol, StringComparison.OrdinalIgnoreCase))
             {
                 await _usuarioRepo.IncrementarIntentosFallidosAsync(usuario.UsuarioId);
-                await RegistrarBitacora(usuario.UsuarioId, modelo.NombreUsuario, false, ip, userAgent, "Rol incorrecto");
                 return (false, "Credenciales incorrectas.", null);
             }
 
             if (!PasswordHelper.VerifyPassword(modelo.Password, usuario.PasswordHash))
             {
                 await _usuarioRepo.IncrementarIntentosFallidosAsync(usuario.UsuarioId);
-                await RegistrarBitacora(usuario.UsuarioId, modelo.NombreUsuario, false, ip, userAgent, "Contraseña incorrecta");
                 return (false, "Credenciales incorrectas.", null);
             }
 
-            if (string.Equals(usuario.Rol.Nombre, "Azafata", StringComparison.OrdinalIgnoreCase))
+            // VALIDACIÓN DE AZAFATA
+            if (usuario.Rol.Nombre == "Azafata")
             {
-                if (usuario.Autobus is null ||
+                if (usuario.Autobus == null ||
                     !string.Equals(usuario.Autobus.Ficha, modelo.FichaAutobus, StringComparison.OrdinalIgnoreCase))
                 {
-                    await RegistrarBitacora(usuario.UsuarioId, modelo.NombreUsuario, false, ip, userAgent, "Ficha de autobús inválida");
-                    return (false, "La ficha del autobús no es válida.", null);
+                    return (false, "Ficha de autobús incorrecta.", null);
                 }
             }
 
             await _usuarioRepo.ActualizarUltimoAccesoAsync(usuario.UsuarioId);
             await RegistrarBitacora(usuario.UsuarioId, modelo.NombreUsuario, true, ip, userAgent, "Acceso exitoso");
 
+            // 🔥 CLAIMS CORRECTOS
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
-                new Claim(ClaimTypes.Name,           usuario.NombreUsuario),
-                new Claim(ClaimTypes.GivenName,      usuario.NombreCompleto),
-                new Claim(ClaimTypes.Role,           usuario.Rol.Nombre),
+                new Claim(ClaimTypes.Name, usuario.NombreUsuario),
+                new Claim(ClaimTypes.GivenName, usuario.NombreCompleto),
+                new Claim(ClaimTypes.Role, usuario.Rol.Nombre),
+                new Claim("AutobusId", usuario.AutobusId?.ToString() ?? "0")
             };
-
-            if (usuario.Autobus is not null)
-                claims.Add(new Claim("AutobusId", usuario.AutobusId.ToString()!));
 
             var identity = new ClaimsIdentity(claims, "CookieAuth");
             var principal = new ClaimsPrincipal(identity);

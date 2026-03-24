@@ -11,8 +11,9 @@ namespace TransporteEscolar.Data
         public DbSet<Rol> Roles { get; set; }
         public DbSet<Autobus> Autobuses { get; set; }
         public DbSet<BitacoraAcceso> BitacoraAccesos { get; set; }
-        public DbSet<Estudiante> Estudiantes { get; set; }
-        public DbSet<RegistroAbordaje> RegistrosAbordaje { get; set; }
+        public DbSet<Alumno> Alumnos { get; set; }
+        public DbSet<Asistencia> Asistencias { get; set; }
+       
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -81,25 +82,26 @@ namespace TransporteEscolar.Data
                  .OnDelete(DeleteBehavior.SetNull);
             });
             // ── Estudiante ─────────────────────────
-            modelBuilder.Entity<Estudiante>(e =>
+            modelBuilder.Entity<Alumno>(e =>
             {
-                e.ToTable("Estudiantes");
-                e.HasKey(e => e.IdEstudiante);
-                e.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
-                e.Property(e => e.Apellido1).HasMaxLength(100);
-                e.Property(e => e.Apellido2).HasMaxLength(100);
-                e.Property(e => e.CodigoQR).HasMaxLength(100);
+                e.ToTable("Alumnos");
+                e.HasKey(a => a.AlumnoId);
+
+                e.HasOne(a => a.Autobus)
+                 .WithMany()
+                 .HasForeignKey(a => a.AutobusId);
             });
 
-            // ── Registro Abordaje ──────────────────
-            modelBuilder.Entity<RegistroAbordaje>(e =>
-            {
-                e.ToTable("RegistroAbordaje");
-                e.HasKey(r => r.IdRegistro);
+            // ── Asistencia ─────────────────────────
 
-                e.HasOne(r => r.Estudiante)
+            modelBuilder.Entity<Asistencia>(e =>
+            {
+                e.ToTable("Asistencia");
+                e.HasKey(a => a.AsistenciaId);
+
+                e.HasOne(a => a.Alumno)
                  .WithMany()
-                 .HasForeignKey(r => r.IdEstudiante);
+                 .HasForeignKey(a => a.AlumnoId);
             });
         }
     }

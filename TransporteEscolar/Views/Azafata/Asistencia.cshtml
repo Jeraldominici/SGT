@@ -1,37 +1,52 @@
 @{
-    ViewData["Title"] = "Registro de Asistencia";
+    ViewData["Title"] = "Asistencia";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>📝 Escanear QR del Estudiante</h2>
+<h2>📝 Escanear QR</h2>
 
-<div id="reader" style="width:300px; margin-top:20px;"></div>
+<div class="scanner-box">
+    <div id="reader"></div>
+</div>
 
-<p id="resultado" style="margin-top:20px; font-weight:bold;"></p>
+<p id="resultado"></p>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-function onScanSuccess(decodedText) {
+    function onScanSuccess(decodedText) {
 
-    document.getElementById("resultado").innerText = "QR leído: " + decodedText;
+        document.getElementById("resultado").innerText = "Alumno: " + decodedText;
 
-    fetch('/Azafata/RegistrarQR', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(decodedText)
-    })
-    .then(res => res.json())
+        fetch('/Azafata/RegistrarQR', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(decodedText)
+        })
+        .then(res => res.json())
     .then(data => {
-        alert(data.mensaje);
-    })
-    .catch(err => console.error(err));
-}
 
-let scanner = new Html5QrcodeScanner("reader", {
-    fps: 10,
-    qrbox: 250
-});
+        // 🔥 mostrar mensaje  en pantalla
+        document.getElementById("resultado").innerText = data.mensaje;
 
-scanner.render(onScanSuccess);
+        // 🔊 sonido
+        let audio = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
+        audio.play();
+    });
+    }
+
+    new Html5QrcodeScanner("reader", {
+        fps: 10,
+        qrbox: 250
+    }).render(onScanSuccess);
 </script>
+
+<style>
+    .scanner-box {
+        margin-top: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 12px;
+        width: fit-content;
+    }
+</style>

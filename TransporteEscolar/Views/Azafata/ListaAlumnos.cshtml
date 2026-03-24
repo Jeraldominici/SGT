@@ -1,23 +1,131 @@
+@model IEnumerable<dynamic>
+
 @{
     ViewData["Title"] = "Lista de Alumnos";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>👶 Lista de Alumnos</h2>
+<h2 style="margin-bottom:20px;">👶 Lista de Alumnos</h2>
 
-<table border="1" style="width:100%; margin-top:20px; text-align:center;">
-    <tr>
-        <th>Nombre</th>
-        <th>Estado</th>
-    </tr>
+<div class="table-container">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Alumno</th>
+                <th>Tutor</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th>QR</th>
+            </tr>
+        </thead>
 
-    <tr>
-        <td>Juan Pérez</td>
-        <td>❌ No ha subido</td>
-    </tr>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var a = item.Alumno;
+                var estado = item.Estado ?? "";
 
-    <tr>
-        <td>Ana López</td>
-        <td>✅ En el autobús</td>
-    </tr>
-</table>
+                string texto = "⚪ Pendiente";
+                string clase = "pending";
+
+                if (estado == "Entrada")
+                {
+                    texto = "🟢 En el autobús";
+                    clase = "success";
+                }
+                else if (estado == "Salida")
+                {
+                    texto = "🔴 Ya bajó";
+                    clase = "danger";
+                }
+
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar">👶</div>
+                            <span>@a.NombreCompleto</span>
+                        </div>
+                    </td>
+
+                    <td>@a.NombreTutor</td>
+
+                    <td>@a.TelefonoEmergencia</td>
+
+                    <td>
+                        <span class="status @clase">@texto</span>
+                    </td>
+
+                    <td>
+                        <img src="/Azafata/GenerarQR?id=@a.AlumnoId" width="150" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .table-container {
+        background: white;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .custom-table th {
+            text-align: left;
+            padding: 12px;
+            font-size: 13px;
+            color: #64748B;
+        }
+
+        .custom-table td {
+            padding: 14px 12px;
+            border-top: 1px solid #eee;
+        }
+
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #38bdf8, #6366f1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 16px;
+    }
+
+    .status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+</style>
