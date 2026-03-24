@@ -1,18 +1,295 @@
-﻿@{
-    ViewData["Title"] = "Portal del Padre";
+﻿@model TransporteEscolar.ViewModels.PadreDashboardViewModel
+@{
+    ViewData["Title"] = "Mi Panel";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class="dashboard-container" style="margin:0; padding:0;">
-    <div class="dashboard-header padre-header">
-        <div class="dash-icon">👨‍👧</div>
-        <div>
-            <h1>Portal del Padre</h1>
-            <p>Seguimiento escolar en tiempo real</p>
-        </div>
-    </div>
-    <div class="dash-cards">
-        <div class="dash-card">🗺️ Ubicación del Autobús</div>
-        <div class="dash-card">📅 Asistencia de Mi Hijo</div>
-        <div class="dash-card">🔔 Notificaciones</div>
+
+<div style="margin-bottom:1.5rem;">
+    <h2 style="font-size:1.375rem; font-weight:700; color:#0F172A; margin:0;">
+        Bienvenido, @ViewBag.NombreCompleto 👋
+    </h2>
+    <p style="color:#64748B; font-size:.875rem; margin-top:.2rem;">
+        @DateTime.Today.ToString("dddd, dd 'de' MMMM 'de' yyyy",
+        new System.Globalization.CultureInfo("es-ES"))
+    </p>
+</div>
+
+@if (!Model.Hijos.Any())
+{
+<div style="background:#FEF9F0; border:1.5px solid #FDE68A; border-radius:12px;
+                    padding:2rem; text-align:center;">
+    <div style="font-size:2.5rem; margin-bottom:.75rem;">👶</div>
+    <div style="font-weight:600; color:#92400E;">No tienes hijos asignados aún</div>
+    <div style="font-size:.875rem; color:#B45309; margin-top:.4rem;">
+        Contacta al administrador para vincular a tus hijos.
     </div>
 </div>
+}
+else
+{
+@foreach (var h in Model.Hijos)
+    {
+        var hoyIda = h.AsistenciaHoyIda;
+        var hoyVuelta = h.AsistenciaHoyVuelta;
+
+<div class="hijo-card" style="margin-bottom:1.75rem;">
+
+    <!-- Encabezado del hijo -->
+    <div class="hijo-header">
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <div class="hijo-avatar">
+                @if (!string.IsNullOrEmpty(h.Alumno.FotoUrl))
+                        {
+                <img src="@h.Alumno.FotoUrl"
+                     style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+                        }
+                        else
+                        {
+                @h.Alumno.NombreCompleto[0]
+                        }
+            </div>
+            <div>
+                <div style="font-size:1.1rem; font-weight:700; color:#0F172A;">
+                    @h.Alumno.NombreCompleto
+                </div>
+                <div style="font-size:.8125rem; color:#64748B; margin-top:.15rem;">
+                    @(h.Alumno.GradoEscolar ?? "Sin grado asignado")
+                    @if (!string.IsNullOrEmpty(h.Alumno.TelefonoEmergencia))
+                            {
+                    <span style="margin-left:.75rem;">📞 @h.Alumno.TelefonoEmergencia</span>
+                            }
+                </div>
+            </div>
+        </div>
+        <a asp-action="Hijo" asp-controller="Padre" asp-route-id="@h.Alumno.AlumnoId"
+           style="font-size:.8125rem; font-weight:600; color:#2563EB; text-decoration:none;
+                                  border:1.5px solid #BFDBFE; padding:.4rem .9rem; border-radius:7px;
+                                  transition:.15s; white-space:nowrap;"
+           onmouseover="this.style.background='#EFF6FF';"
+           onmouseout="this.style.background='transparent';">
+            Ver detalle →
+        </a>
+    </div>
+    <div style="position:relative; max-width:320px; margin-bottom:1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+             style="position:absolute; left:.75rem; top:50%; transform:translateY(-50%);
+                        width:16px; height:16px; color:#94A3B8; pointer-events:none;">
+            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+        </svg>
+        <input type="text" id="buscarChoferes" placeholder="Buscar chofer..."
+               style="width:100%; padding:.6rem .9rem .6rem 2.25rem; border:1.5px solid #E2E8F0;
+                          border-radius:8px; font-size:.875rem; font-family:'Inter',sans-serif;
+                          color:#0F172A; outline:none; transition:.15s; box-sizing:border-box;"
+               onfocus="this.style.borderColor='#2563EB'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,.1)';"
+               onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none';" />
+    </div>
+
+    <div style="padding:1.25rem; display:grid;
+                                grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.25rem;">
+
+        <!-- Asistencia de hoy -->
+        <div class="info-seccion">
+            <div class="info-titulo">📋 Asistencia de Hoy</div>
+            <div style="display:flex; gap:.75rem; margin-top:.6rem;">
+                <div class="asistencia-pill @(hoyIda != null ? (hoyIda.Presente ? "presente" : "ausente") : "sin-datos")">
+                    🌅 Ida:
+                    @if (hoyIda != null)
+                            {
+                    @(hoyIda.Presente ? "Presente" : "Ausente")
+                            }
+                            else
+                            {
+
+                    <span>Sin registro</span>
+                            }
+                </div>
+                <div class="asistencia-pill @(hoyVuelta != null ? (hoyVuelta.Presente ? "presente" : "ausente") : "sin-datos")">
+                    🌆 Vuelta:
+                    @if (hoyVuelta != null)
+                            {
+                    @(hoyVuelta.Presente ? "Presente" : "Ausente")
+                            }
+                            else
+                            {
+
+                    <span>Sin registro</span>
+                            }
+                </div>
+            </div>
+        </div>
+
+        <!-- Info del bus -->
+        <div class="info-seccion">
+            <div class="info-titulo">🚌 Autobús Asignado</div>
+            <div style="margin-top:.6rem; font-size:.875rem; color:#334155;">
+                <div><strong>Ficha:</strong> @h.Autobus.Ficha</div>
+                @if (!string.IsNullOrEmpty(h.Autobus.Placa))
+                        {
+                <div><strong>Placa:</strong> @h.Autobus.Placa</div>
+                        }
+                <div><strong>Capacidad:</strong> @h.Autobus.Capacidad pasajeros</div>
+            </div>
+        </div>
+
+        <!-- Chofer del día -->
+        <div class="info-seccion">
+            <div class="info-titulo">🧑‍✈️ Chofer de Hoy</div>
+            @if (h.JornadaHoy?.Chofer != null)
+                    {
+            <div style="display:flex; align-items:center; gap:.65rem; margin-top:.6rem;">
+                <div style="width:36px; height:36px; border-radius:50%; overflow:hidden; flex-shrink:0;
+                                                    background:linear-gradient(135deg,#0369A1,#0891B2);
+                                                    display:flex; align-items:center; justify-content:center;
+                                                    font-size:.8rem; font-weight:700; color:#fff;">
+                    @if (!string.IsNullOrEmpty(h.JornadaHoy.Chofer.FotoUrl))
+                                {
+                    <img src="@h.JornadaHoy.Chofer.FotoUrl"
+                         style="width:100%;height:100%;object-fit:cover;" />
+                                }
+                                else
+                                {
+                    @h.JornadaHoy.Chofer.NombreCompleto[0]
+                                }
+                </div>
+                <div>
+                    <div style="font-weight:600; font-size:.875rem; color:#0F172A;">
+                        @h.JornadaHoy.Chofer.NombreCompleto
+                    </div>
+                    @if (!string.IsNullOrEmpty(h.JornadaHoy.Chofer.Telefono))
+                                {
+                    <div style="font-size:.75rem; color:#64748B;">
+                        📞 @h.JornadaHoy.Chofer.Telefono
+                    </div>
+                                }
+                </div>
+            </div>
+                    }
+                    else
+                    {
+            <div style="font-size:.875rem; color:#94A3B8; margin-top:.6rem;">
+                Sin jornada activa hoy
+            </div>
+                    }
+        </div>
+
+        <!-- Incidencias recientes -->
+        @if (h.Incidencias.Any())
+                {
+        <div class="info-seccion" style="grid-column:1/-1;">
+            <div class="info-titulo">⚠️ Incidencias Recientes</div>
+            <div style="margin-top:.6rem; display:flex; flex-direction:column; gap:.5rem;">
+                @foreach (var inc in h.Incidencias.Take(3))
+                            {
+                <div style="display:flex; align-items:flex-start; gap:.65rem;
+                                                            padding:.65rem .85rem; background:#FFFBEB;
+                                                            border:1px solid #FDE68A; border-radius:8px;">
+                    <span style="font-size:1rem; flex-shrink:0;">
+                        @(inc.Tipo == "Accidente" ? "🚨" :
+                                                                inc.Tipo == "Comportamiento" ? "😤" :
+                                                                inc.Tipo == "Retraso" ? "⏰" : "📌")
+                    </span>
+                    <div>
+                        <div style="font-weight:600; font-size:.875rem; color:#0F172A;">
+                            @inc.Titulo
+                        </div>
+                        <div style="font-size:.75rem; color:#64748B; margin-top:.1rem;">
+                            @inc.Fecha.ToString("dd/MM/yyyy") — @inc.Tipo
+                        </div>
+                        <div style="font-size:.8125rem; color:#334155; margin-top:.2rem;">
+                            @inc.Descripcion
+                        </div>
+                    </div>
+                </div>
+                                }
+            </div>
+        </div>
+                }
+    </div>
+</div>
+    }
+}
+
+<style>
+    .hijo-card {
+        background: #fff;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,.05);
+        transition: box-shadow .18s;
+    }
+
+        .hijo-card:hover {
+            box-shadow: 0 4px 18px rgba(0,0,0,.08);
+        }
+
+    .hijo-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        background: #F8FAFC;
+        border-bottom: 1.5px solid #E2E8F0;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .hijo-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        overflow: hidden;
+        background: linear-gradient(135deg,#7C3AED,#A855F7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        border: 2.5px solid #E2E8F0;
+    }
+
+    .info-seccion {
+        background: #F8FAFC;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .info-titulo {
+        font-size: .75rem;
+        font-weight: 700;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .asistencia-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .8125rem;
+        font-weight: 600;
+        padding: .3rem .75rem;
+        border-radius: 20px;
+    }
+
+        .asistencia-pill.presente {
+            background: #F0FDF4;
+            color: #15803D;
+            border: 1px solid #BBF7D0;
+        }
+
+        .asistencia-pill.ausente {
+            background: #FEF2F2;
+            color: #DC2626;
+            border: 1px solid #FECACA;
+        }
+
+        .asistencia-pill.sin-datos {
+            background: #F1F5F9;
+            color: #94A3B8;
+            border: 1px solid #E2E8F0;
+        }
+</style>
