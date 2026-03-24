@@ -1,0 +1,247 @@
+@model List<TransporteEscolar.Models.PadreAlumno>
+@{
+    ViewData["Title"] = "Hijos del Padre";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var padre = ViewBag.Padre as TransporteEscolar.Models.Usuario;
+    var alumnos = ViewBag.Alumnos as List<TransporteEscolar.Models.Alumno> ?? new();
+}
+
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+    <a asp-action="Usuarios" asp-controller="Admin" class="btn-back">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;">
+            <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd" />
+        </svg>
+    </a>
+    <div>
+        <h2 style="font-size:1.375rem; font-weight:700; color:#0F172A; margin:0;">
+            Hijos de @padre?.NombreCompleto
+        </h2>
+        <p style="color:#64748B; font-size:.875rem; margin-top:.2rem;">
+            @Model.Count hijo(s) asignado(s)
+        </p>
+    </div>
+</div>
+
+@if (TempData["Exito"] != null)
+{
+    <div class="alert-toast success" style="margin-bottom:1.25rem;">✅ @TempData["Exito"]</div>
+}
+
+<!-- Asignar nuevo alumno -->
+@if (alumnos.Any())
+{
+    <div style="background:#fff; border:1.5px solid #E2E8F0; border-radius:12px;
+                            padding:1.25rem; margin-bottom:1.5rem;">
+        <div style="font-size:.875rem; font-weight:600; color:#374151; margin-bottom:.85rem;">
+            ➕ Asignar nuevo alumno
+        </div>
+        <form asp-action="AsignarAlumno" asp-controller="Admin" method="post"
+              style="display:flex; gap:.75rem; flex-wrap:wrap; align-items:flex-end;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="padreId" value="@padre?.UsuarioId" />
+            <select name="alumnoId" class="finput" style="flex:1; min-width:220px;">
+                <option value="">— Selecciona un alumno —</option>
+                @foreach (var a in alumnos)
+                {
+                    <option value="@a.AlumnoId">
+                        @a.NombreCompleto (@(a.GradoEscolar ?? "Sin grado") — Bus @a.AutobusId)
+                    </option>
+                }
+            </select>
+            <button type="submit"
+                    style="padding:.6rem 1.1rem; background:#2563EB; color:#fff; border:none;
+                                       border-radius:8px; font-size:.875rem; font-weight:600; cursor:pointer;
+                                       font-family:'Inter',sans-serif; white-space:nowrap;">
+                Asignar
+            </button>
+        </form>
+    </div>
+}
+<div style="position:relative; max-width:320px; margin-bottom:1rem;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+         style="position:absolute; left:.75rem; top:50%; transform:translateY(-50%);
+                width:16px; height:16px; color:#94A3B8; pointer-events:none;">
+        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+    </svg>
+    <input type="text" id="buscarHijos" placeholder="Buscar alumno..."
+           style="width:100%; padding:.6rem .9rem .6rem 2.25rem; border:1.5px solid #E2E8F0;
+                  border-radius:8px; font-size:.875rem; font-family:'Inter',sans-serif;
+                  color:#0F172A; outline:none; transition:.15s; box-sizing:border-box;"
+           onfocus="this.style.borderColor='#2563EB'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,.1)';"
+           onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none';" />
+</div>
+
+<!-- Lista de hijos actuales -->
+<div class="tabla-card">
+    @if (!Model.Any())
+    {
+        <div style="padding:2.5rem; text-align:center; color:#94A3B8;">
+            <div style="font-size:2rem; margin-bottom:.5rem;">👶</div>
+            Sin hijos asignados. Usa el formulario de arriba para asignar uno.
+        </div>
+    }
+    else
+    {
+        <table class="tabla-usuarios" id="tablaHijos">
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Grado</th>
+                    <th>Autobús</th>
+                    <th style="text-align:center;">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var v in Model)
+                {
+                    <tr>
+                        <td style="font-weight:600; color:#0F172A;">@v.Alumno.NombreCompleto</td>
+                        <td>
+                            <span style="background:#EFF6FF; color:#2563EB; font-size:.75rem;
+                                                                 font-weight:600; padding:.15rem .5rem; border-radius:20px;">
+                                @(v.Alumno.GradoEscolar ?? "Sin grado")
+                            </span>
+                        </td>
+                        <td style="color:#64748B;">🚌 Ficha @v.Alumno.Autobus?.Ficha</td>
+                        <td style="text-align:center;">
+                            <form asp-action="EliminarVinculo" asp-controller="Admin" method="post"
+                                  onsubmit="return confirm('¿Quitar a @v.Alumno.NombreCompleto de este padre?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="padreAlumnoId" value="@v.PadreAlumnoId" />
+                                <input type="hidden" name="padreId" value="@padre?.UsuarioId" />
+                                <button type="submit" class="btn-accion eliminar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<script>
+    document.getElementById('buscarHijos').addEventListener('input', function () {
+        const texto = this.value.toLowerCase().trim();
+        document.querySelectorAll('#tablaHijos tbody tr').forEach(function (fila) {
+            fila.style.display = fila.textContent.toLowerCase().includes(texto) ? '' : 'none';
+        });
+    });
+</script>
+
+<style>
+    .btn-back {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: #fff;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 8px;
+        color: #64748B;
+        text-decoration: none;
+        transition: all .15s;
+        flex-shrink: 0;
+    }
+
+        .btn-back:hover {
+            border-color: #2563EB;
+            color: #2563EB;
+            background: #EFF6FF;
+        }
+
+    .alert-toast {
+        padding: .75rem 1.1rem;
+        border-radius: 8px;
+        font-size: .875rem;
+        font-weight: 500;
+    }
+
+        .alert-toast.success {
+            background: #F0FDF4;
+            color: #166534;
+            border: 1px solid #BBF7D0;
+        }
+
+    .finput {
+        padding: .6rem .85rem;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 8px;
+        font-size: .875rem;
+        font-family: 'Inter',sans-serif;
+        color: #0F172A;
+        outline: none;
+    }
+
+        .finput:focus {
+            border-color: #2563EB;
+        }
+
+    .tabla-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1.5px solid #E2E8F0;
+        overflow-x: auto;
+    }
+
+    .tabla-usuarios {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .tabla-usuarios thead tr {
+            background: #F8FAFC;
+            border-bottom: 1.5px solid #E2E8F0;
+        }
+
+        .tabla-usuarios th {
+            padding: .75rem 1rem;
+            text-align: left;
+            font-size: .75rem;
+            font-weight: 700;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .tabla-usuarios td {
+            padding: .85rem 1rem;
+            border-bottom: 1px solid #F1F5F9;
+            vertical-align: middle;
+        }
+
+        .tabla-usuarios tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+    .btn-accion {
+        width: 32px;
+        height: 32px;
+        border-radius: 7px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .btn-accion svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .btn-accion.eliminar {
+            background: #FEF2F2;
+            color: #DC2626;
+        }
+
+            .btn-accion.eliminar:hover {
+                background: #DC2626;
+                color: #fff;
+            }
+</style>
